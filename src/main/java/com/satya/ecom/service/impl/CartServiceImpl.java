@@ -2,6 +2,7 @@ package com.satya.ecom.service.impl;
 
 import com.satya.ecom.dto.cart.CartItemRequestDto;
 import com.satya.ecom.dto.user.UserResponseDto;
+import com.satya.ecom.exception.ResourceNotFoundException;
 import com.satya.ecom.model.Cart;
 import com.satya.ecom.model.CartItem;
 import com.satya.ecom.model.Product;
@@ -11,6 +12,7 @@ import com.satya.ecom.repository.ProductRepo;
 import com.satya.ecom.repository.UserRepo;
 import com.satya.ecom.service.AuthService;
 import com.satya.ecom.service.CartService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -34,9 +36,13 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart addToCart(CartItemRequestDto cartItemRequestDto) {
         UserResponseDto userResponseDto = authService.getCurrentUser();
-        User user = userRepo.findByEmail(userResponseDto.email()).get();
+        User user = userRepo.findByEmail(userResponseDto.email())
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found with email: " + userResponseDto.email()));
         Cart cart = user.getCart();
-        Product product = productRepo.findById(cartItemRequestDto.productId()).get();
+        Product product = productRepo.findById(cartItemRequestDto.productId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Product not found with id: " + cartItemRequestDto.productId()));
         List<CartItem> cartItemList = cart.getCartItemList();
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
@@ -52,16 +58,19 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart viewCart() {
         UserResponseDto userResponseDto = authService.getCurrentUser();
-        User user = userRepo.findByEmail(userResponseDto.email()).get();
+        User user = userRepo.findByEmail(userResponseDto.email())
+                .orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + userResponseDto.email()));
         return user.getCart();
     }
 
     @Override
     public Cart removeFromCart(UUID productId) {
         UserResponseDto userResponseDto = authService.getCurrentUser();
-        User user = userRepo.findByEmail(userResponseDto.email()).get();
+        User user = userRepo.findByEmail(userResponseDto.email())
+                .orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + userResponseDto.email()));
         Cart cart = user.getCart();
-
         List<CartItem> cartItemList = cart.getCartItemList();
         CartItem currentCartItem;
         for(CartItem cartItem: cartItemList){
@@ -74,7 +83,6 @@ public class CartServiceImpl implements CartService {
                 break;
             }
         }
-
         return cartRepo.save(cart);
     }
 }

@@ -1,6 +1,7 @@
 package com.satya.ecom.service.impl;
 
 import com.satya.ecom.dto.product.CreateProductDto;
+import com.satya.ecom.exception.ResourceNotFoundException;
 import com.satya.ecom.mapper.ProductMapper;
 import com.satya.ecom.model.Product;
 import com.satya.ecom.repository.ProductRepo;
@@ -26,7 +27,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getProductById(UUID id) {
-        return productRepo.findById(id).get();
+        return productRepo.findById(id)
+                .orElseThrow(() ->
+                    new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
@@ -37,7 +40,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product updateProductById(UUID id, CreateProductDto createProductRequest) {
-        Product product = productRepo.findById(id).get();
+        Product product = productRepo.findById(id).
+                orElseThrow(() ->
+                    new ResourceNotFoundException("Product not found with id: " + id));
         product.setName(createProductRequest.name());
         product.setDescription(createProductRequest.description());
         product.setStockQuantity(createProductRequest.stockQuantity());

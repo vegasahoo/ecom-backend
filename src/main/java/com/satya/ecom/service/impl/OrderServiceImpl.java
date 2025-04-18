@@ -7,6 +7,7 @@ import com.satya.ecom.repository.OrderRepo;
 import com.satya.ecom.repository.UserRepo;
 import com.satya.ecom.service.AuthService;
 import com.satya.ecom.service.OrderService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,7 +31,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order placeOrder() {
         UserResponseDto userResponseDto = authService.getCurrentUser();
-        User user = userRepo.findByEmail(userResponseDto.email()).get();
+        User user = userRepo.findByEmail(userResponseDto.email())
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found with email: " + userResponseDto.email()));
         Order order = new Order();
         Cart cart = user.getCart();
         List<OrderItem> orderItemList = new ArrayList<>();
@@ -55,7 +58,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getMyOrders() {
         UserResponseDto userResponseDto = authService.getCurrentUser();
-        User user = userRepo.findByEmail(userResponseDto.email()).get();
+        User user = userRepo.findByEmail(userResponseDto.email())
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found with email: " + userResponseDto.email()));
         return user.getOrder();
     }
 }
