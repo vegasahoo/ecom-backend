@@ -53,14 +53,14 @@ public class CartServiceImpl implements CartService {
     public Cart viewCart() {
         UserResponseDto userResponseDto = authService.getCurrentUser();
         User user = userRepo.findByEmail(userResponseDto.email()).get();
-        return cartRepo.findByUser(user);
+        return user.getCart();
     }
 
     @Override
     public Cart removeFromCart(UUID productId) {
         UserResponseDto userResponseDto = authService.getCurrentUser();
         User user = userRepo.findByEmail(userResponseDto.email()).get();
-        Cart cart = cartRepo.findByUser(user);
+        Cart cart = user.getCart();
 
         List<CartItem> cartItemList = cart.getCartItemList();
         CartItem currentCartItem;
