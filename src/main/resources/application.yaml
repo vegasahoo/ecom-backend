@@ -3,3 +3,7 @@ spring:
     name: ecom-backend
   profiles:
     active: dev
+
+server:
+  servlet:
+    context-path: /ecom-backend
