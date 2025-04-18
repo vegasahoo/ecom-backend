@@ -1,5 +1,6 @@
 package com.satya.ecom.security.config;
 
+import com.satya.ecom.security.jwt.JwtAuthenticationEntryPoint;
 import com.satya.ecom.security.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,9 +24,10 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
-
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
     @Bean
@@ -45,7 +47,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint));
         return httpSecurity.build();
     }
 

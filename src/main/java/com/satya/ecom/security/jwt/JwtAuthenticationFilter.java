@@ -1,6 +1,7 @@
 package com.satya.ecom.security.jwt;
 
 import com.satya.ecom.security.service.CustomUserDetailsService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,15 +36,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
 
-        String token = getJwtTokenFromRequest(request);
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, new ArrayList<>());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try{
+            String token = getJwtTokenFromRequest(request);
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                String username = jwtTokenProvider.getUsernameFromToken(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
+        catch (JwtException ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"error\": \"Invalid JWT: " + ex.getMessage() + "\"}"
+            );
+        } catch (Exception ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"error\": \"Authentication failed: " + ex.getMessage() + "\"}"
+            );
+        }
     }
 
     private String getJwtTokenFromRequest(HttpServletRequest request) {
