@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: ecom-backend
+  profiles:
+    active: dev
