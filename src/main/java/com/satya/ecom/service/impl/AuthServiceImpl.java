@@ -1,6 +1,5 @@
 package com.satya.ecom.service.impl;
 
-import com.satya.ecom.dto.user.LoginUserDto;
 import com.satya.ecom.dto.user.RegisterUserDto;
 import com.satya.ecom.dto.user.UserResponseDto;
 import com.satya.ecom.mapper.UserMapper;
@@ -10,10 +9,9 @@ import com.satya.ecom.model.User;
 import com.satya.ecom.repository.CartRepo;
 import com.satya.ecom.repository.UserRepo;
 import com.satya.ecom.service.AuthService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -21,10 +19,13 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepo userRepo;
     private final CartRepo cartRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImpl(UserRepo userRepo, CartRepo cartRepo) {
+
+    public AuthServiceImpl(UserRepo userRepo, CartRepo cartRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.cartRepo = cartRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -32,17 +33,12 @@ public class AuthServiceImpl implements AuthService {
     public UserResponseDto registerUser(RegisterUserDto registerUserDto) {
         User user = UserMapper.mapRegisterUserDtoToUser(registerUserDto);
         user.setRole(Role.CUSTOMER);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user = userRepo.save(user);
         Cart cart = new Cart();
         cart.setUser(user);
         cartRepo.save(cart);
         return UserMapper.mapUserToUserResponseDto(user);
-    }
-
-    @Override
-    public boolean loginUser(LoginUserDto loginUserDto) {
-        Optional<User> user = userRepo.findByEmail(loginUserDto.email());
-        return user.map(value -> value.getPassword().equals(loginUserDto.password())).orElse(false);
     }
 
     @Override
